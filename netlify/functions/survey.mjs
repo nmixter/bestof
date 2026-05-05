@@ -8,21 +8,22 @@ const CONFIG_KEY = "config/current";
 const OPTIONS_KEY = "config/options";
 const IP_PREFIX = "ip-locks/";
 
-export const handler = async (event) => {
+export default async function handler(request, context) {
   try {
-    const action = event.queryStringParameters?.action || "";
+    const url = new URL(request.url);
+    const action = url.searchParams.get("action") || "";
 
-    if (event.httpMethod === "OPTIONS") return json(200, {});
-    if (action === "config" && event.httpMethod === "GET") return getConfig();
-    if (action === "submit" && event.httpMethod === "POST") return submitResponse(event);
-    if (action === "results" && event.httpMethod === "GET") return requireAdmin(event, getResults);
-    if (action === "save-config" && event.httpMethod === "POST") return requireAdmin(event, () => saveConfig(event));
+    if (request.method === "OPTIONS") return json(200, {});
+    if (action === "config" && request.method === "GET") return getConfig();
+    if (action === "submit" && request.method === "POST") return submitResponse(request, context);
+    if (action === "results" && request.method === "GET") return requireAdmin(request, getResults);
+    if (action === "save-config" && request.method === "POST") return requireAdmin(request, () => saveConfig(request));
 
     return json(404, { error: "Not found" });
   } catch (error) {
     return json(500, { error: "Server error", detail: error.message });
   }
-};
+}
 
 async function getConfig() {
   const store = getStore("best-of-survey");
@@ -31,8 +32,8 @@ async function getConfig() {
   return json(200, { survey, options });
 }
 
-async function submitResponse(event) {
-  const body = JSON.parse(event.body || "{}");
+async function submitResponse(request, context) {
+  const body = await request.json().catch(() => ({}));
   const response = body.response;
   const survey = body.survey;
 
@@ -41,7 +42,7 @@ async function submitResponse(event) {
   }
 
   const store = getStore("best-of-survey");
-  const ipHash = hashIp(getClientIp(event));
+  const ipHash = hashIp(getClientIp(request, context));
   const ipKey = `${IP_PREFIX}${response.surveySlug || "survey"}/${ipHash}`;
   const existingIp = await store.get(ipKey, { type: "json", consistency: "strong" });
 
@@ -56,7 +57,7 @@ async function submitResponse(event) {
     ...response,
     submittedAt: new Date().toISOString(),
     ipHash,
-    userAgent: event.headers["user-agent"] || ""
+    userAgent: request.headers.get("user-agent") || ""
   };
 
   await store.setJSON(`${RESPONSE_PREFIX}${saved.surveySlug || "survey"}/${saved.id}`, saved, {
@@ -84,8 +85,8 @@ async function getResults() {
   return json(200, { survey, options, responses });
 }
 
-async function saveConfig(event) {
-  const body = JSON.parse(event.body || "{}");
+async function saveConfig(request) {
+  const body = await request.json().catch(() => ({}));
   if (!body.survey || !Array.isArray(body.survey.questions)) {
     return json(400, { error: "Invalid survey config" });
   }
@@ -95,13 +96,13 @@ async function saveConfig(event) {
   return json(200, { ok: true });
 }
 
-function requireAdmin(event, handler) {
-  const provided = event.headers["x-admin-password"] || "";
+function requireAdmin(request, handlerFn) {
+  const provided = request.headers.get("x-admin-password") || "";
   if (!safeEqual(provided, ADMIN_PASSWORD)) {
     return json(401, { error: "Unauthorized" });
   }
 
-  return handler();
+  return handlerFn();
 }
 
 function mergeSubmittedOptions(options, survey, response) {
@@ -125,11 +126,12 @@ function stripPrivateResponseFields(response) {
   return safeResponse;
 }
 
-function getClientIp(event) {
+function getClientIp(request, context) {
   return (
-    event.headers["x-nf-client-connection-ip"] ||
-    event.headers["client-ip"] ||
-    event.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    context?.ip ||
+    request.headers.get("x-nf-client-connection-ip") ||
+    request.headers.get("client-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "unknown"
   );
 }
@@ -152,15 +154,14 @@ function safeEqual(a, b) {
   return left.length === right.length && crypto.timingSafeEqual(left, right);
 }
 
-function json(statusCode, body) {
-  return {
-    statusCode,
+function json(status, body) {
+  return new Response(JSON.stringify(body), {
+    status,
     headers: {
       "content-type": "application/json",
       "access-control-allow-origin": "*",
       "access-control-allow-methods": "GET,POST,OPTIONS",
       "access-control-allow-headers": "content-type,x-admin-password"
-    },
-    body: JSON.stringify(body)
-  };
+    }
+  });
 }
