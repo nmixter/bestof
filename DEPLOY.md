@@ -2,12 +2,12 @@
 
 ## Public URLs
 
-After deploying to Netlify, replace `YOUR-SITE.netlify.app` with your live site URL.
+Current Netlify site:
 
-- Public survey: `https://YOUR-SITE.netlify.app/#survey/best-of-2026`
-- Admin dashboard: `https://YOUR-SITE.netlify.app/admin.html`
-- Builder: `https://YOUR-SITE.netlify.app/#builder`
-- Results: `https://YOUR-SITE.netlify.app/#dashboard`
+- Public survey: `https://frabjous-basbousa-b24691.netlify.app/#survey/best-of-2026`
+- Admin dashboard: `https://frabjous-basbousa-b24691.netlify.app/admin.html`
+- Builder: `https://frabjous-basbousa-b24691.netlify.app/index.html?admin=1#builder`
+- Results: `https://frabjous-basbousa-b24691.netlify.app/index.html?admin=1#dashboard`
 
 ## Admin Login
 

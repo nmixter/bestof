@@ -4,6 +4,7 @@ const COMPLETED_KEY = "guscm-best-of-2026-completed";
 const ADMIN_PASSWORD_KEY = "guscm-best-of-2026-admin-password";
 const API_ENDPOINT = "/.netlify/functions/survey";
 const BACKEND_ENABLED = location.protocol !== "file:";
+const ADMIN_MODE = new URLSearchParams(location.search).get("admin") === "1";
 
 const introText =
   "Enter the survey for a chance to win a family four pack of tickets to the Boardwalk. One entry per person. Must be received by May 31. Winners will be announced in the July edition of Growing Up in Santa Cruz. Please let your family and friends know to vote for their favorites also. Vote for as many different categories as you can but only one vote per person.";
@@ -181,7 +182,7 @@ function createBallotQuestion(category) {
 }
 
 const sampleSurvey = {
-  version: 3,
+  version: 4,
   title: "Growing Up in Santa Cruz Best Of 2026 Reader Poll",
   description: introText,
   thankYou: thankYouText,
@@ -204,39 +205,7 @@ const sampleSurvey = {
       category: "Entry",
       options: []
     },
-    {
-      id: "reader-area",
-      label: "Where do you live?",
-      type: "single",
-      required: false,
-      category: "Entry",
-      options: ["Santa Cruz", "Capitola", "Aptos", "Scotts Valley", "Watsonville", "San Lorenzo Valley", "Other"]
-    },
-    {
-      id: "reader-sections",
-      label: "Which sections are you voting in today?",
-      type: "multiple",
-      required: false,
-      category: "Entry",
-      options: ["Camps", "Food", "Activities", "Services", "Health", "Outdoors", "Shopping", "Schools", "Celebrations"]
-    },
-    ...ballotCategories.map(createBallotQuestion),
-    {
-      id: "q-overall",
-      label: "How would you rate this year's Best of Santa Cruz ballot?",
-      type: "rating",
-      required: false,
-      category: "Reader sentiment",
-      options: []
-    },
-    {
-      id: "q-comments",
-      label: "What should we know before publishing the 2026 reader results?",
-      type: "text",
-      required: false,
-      category: "Editorial notes",
-      options: []
-    }
+    ...ballotCategories.map(createBallotQuestion)
   ]
 };
 
@@ -277,6 +246,10 @@ function saveResponses() {
 }
 
 async function setView(name) {
+  if (!ADMIN_MODE && name !== "survey") {
+    name = "survey";
+  }
+
   if ((name === "builder" || name === "dashboard") && !(await ensureAdminAccess())) {
     return;
   }
@@ -292,10 +265,12 @@ async function setView(name) {
 }
 
 function getPublicUrl() {
-  return `${location.origin}${location.pathname}#survey/${survey.slug}`;
+  return `${location.origin}${location.pathname.replace(/admin\.html$/, "index.html")}#survey/${survey.slug}`;
 }
 
 function renderAll() {
+  document.body.classList.toggle("admin-mode", ADMIN_MODE);
+  document.body.classList.toggle("public-mode", !ADMIN_MODE);
   renderSettings();
   renderQuestions();
   renderPublicSurvey();
@@ -910,16 +885,11 @@ function csvCell(value) {
 }
 
 function seedDemoResponses() {
-  const choices = {
-    "reader-area": ["Santa Cruz", "Capitola", "Aptos", "Scotts Valley", "Watsonville", "San Lorenzo Valley"],
-    "reader-sections": ["Camps", "Food", "Activities", "Services", "Health", "Outdoors", "Shopping", "Schools", "Celebrations"]
-  };
-
   for (let index = 0; index < 18; index += 1) {
     const answers = {};
-  survey.questions.forEach((question) => {
-      if (question.type === "single" || question.type === "select-other") answers[question.id] = pick(choices[question.id] || question.options.filter((option) => option !== "Other"));
-      if (question.type === "multiple") answers[question.id] = shuffle(choices[question.id] || question.options).slice(0, 2);
+    survey.questions.forEach((question) => {
+      if (question.type === "single" || question.type === "select-other") answers[question.id] = pick(question.options.filter((option) => option !== "Other"));
+      if (question.type === "multiple") answers[question.id] = shuffle(question.options).slice(0, 2);
       if (question.type === "rating") answers[question.id] = String(3 + Math.floor(Math.random() * 3));
       if (question.type === "text") {
         if (question.id === "reader-name") answers[question.id] = `Demo Reader ${index + 1}`;
@@ -1079,5 +1049,6 @@ document.querySelector("#seedResponses").addEventListener("click", seedDemoRespo
 const initial = location.hash.replace("#", "");
 loadRemoteConfig().finally(() => {
   renderAll();
-  setView(initial.startsWith("survey/") ? "survey" : initial || "survey");
+  const fallbackView = ADMIN_MODE ? "dashboard" : "survey";
+  setView(initial.startsWith("survey/") ? "survey" : initial || fallbackView);
 });

@@ -84,6 +84,18 @@ main {
   background: #f6f8fb;
 }
 
+.public-mode .tabs {
+  display: none;
+}
+
+.public-mode .topbar {
+  position: static;
+}
+
+.public-mode .topbar h1 {
+  font-size: 22px;
+}
+
 .tab {
   border: 0;
   background: transparent;
