@@ -1,0 +1,11 @@
+{
+  "name": "growing-up-santa-cruz-best-of-survey",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "check": "node --check app.js && node --check netlify/functions/survey.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^9.1.0"
+  }
+}

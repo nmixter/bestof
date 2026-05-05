@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Growing Up in Santa Cruz Best Of Survey</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Growing Up in Santa Cruz Magazine</p>
+        <h1>Best Of 2026 Survey Studio</h1>
+      </div>
+      <nav class="tabs" aria-label="Primary">
+        <button class="tab active" data-view="builder">Builder</button>
+        <button class="tab" data-view="survey">Public Survey</button>
+        <button class="tab" data-view="dashboard">Results</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="builder" class="view active" aria-labelledby="builder-title">
+        <div class="section-head">
+          <div>
+            <h2 id="builder-title">Survey Builder</h2>
+            <p>Create the ballot, arrange questions, and publish a shareable reader link.</p>
+          </div>
+          <div class="actions">
+            <button class="button secondary" id="resetSample">Restore Sample</button>
+            <button class="button" id="addQuestion">Add Question</button>
+          </div>
+        </div>
+
+        <div class="builder-grid">
+          <form class="panel" id="surveySettings">
+            <label>
+              Survey title
+              <input name="title" type="text" required>
+            </label>
+            <label>
+              Intro message
+              <textarea name="description" rows="4"></textarea>
+            </label>
+            <label>
+              Final thank-you text
+              <textarea name="thankYou" rows="3"></textarea>
+            </label>
+            <label>
+              Publish slug
+              <input name="slug" type="text" pattern="[a-z0-9-]+" required>
+            </label>
+            <label class="toggle">
+              <input name="open" type="checkbox">
+              <span>Accept responses</span>
+            </label>
+            <button class="button" type="submit">Save Settings</button>
+            <div class="public-link">
+              <span>Public link</span>
+              <code id="publicLink"></code>
+              <button class="icon-button" id="copyLink" type="button" title="Copy link">Copy</button>
+            </div>
+          </form>
+
+          <div id="questionList" class="question-list"></div>
+        </div>
+      </section>
+
+      <section id="survey" class="view" aria-labelledby="survey-title">
+        <div class="survey-shell">
+          <form id="publicSurvey" class="survey-card">
+            <p class="eyebrow">2026 Reader Poll</p>
+            <h2 id="survey-title"></h2>
+            <p id="surveyDescription" class="survey-description"></p>
+            <div id="surveyQuestions"></div>
+            <button class="button submit" type="submit">Done</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="dashboard" class="view" aria-labelledby="dashboard-title">
+        <div class="section-head">
+          <div>
+            <h2 id="dashboard-title">Results Dashboard</h2>
+            <p>Track response volume, review winners, and export data for editorial production.</p>
+          </div>
+          <div class="actions">
+            <button class="button secondary" id="seedResponses">Add Demo Responses</button>
+            <button class="button" id="exportCsv">Export CSV</button>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <article>
+            <span>Total responses</span>
+            <strong id="responseCount">0</strong>
+          </article>
+          <article>
+            <span>Questions</span>
+            <strong id="questionCount">0</strong>
+          </article>
+          <article>
+            <span>Survey status</span>
+            <strong id="surveyStatus">Open</strong>
+          </article>
+        </div>
+
+        <section class="winner-panel" aria-labelledby="winner-title">
+          <div>
+            <h3 id="winner-title">Category Winners</h3>
+            <p>Ranked from counted responses. Write-in choices are included.</p>
+          </div>
+          <div id="winnerSummary" class="winner-summary"></div>
+        </section>
+
+        <div id="charts" class="charts"></div>
+      </section>
+    </main>
+
+    <template id="questionEditorTemplate">
+      <article class="question-editor">
+        <div class="question-toolbar">
+          <strong class="question-number"></strong>
+          <div class="toolbar-actions">
+            <button class="small-button move-up" type="button">Up</button>
+            <button class="small-button move-down" type="button">Down</button>
+            <button class="small-button danger delete-question" type="button">Delete</button>
+          </div>
+        </div>
+        <label>
+          Question
+          <input class="q-label" type="text">
+        </label>
+        <div class="editor-row">
+          <label>
+            Type
+            <select class="q-type">
+              <option value="single">Multiple choice</option>
+              <option value="select-other">Dropdown + write-in</option>
+              <option value="multiple">Checkboxes</option>
+              <option value="text">Short answer</option>
+              <option value="rating">Rating</option>
+            </select>
+          </label>
+          <label class="toggle compact">
+            <input class="q-required" type="checkbox">
+            <span>Required</span>
+          </label>
+          <label>
+            Category
+            <input class="q-category" type="text">
+          </label>
+        </div>
+        <label class="options-field">
+          Options, one per line
+          <textarea class="q-options" rows="5"></textarea>
+        </label>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
