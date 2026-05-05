@@ -32,15 +32,29 @@ textarea {
 
 .topbar {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 26px 32px 20px;
+  padding: 16px 32px;
   border-bottom: 1px solid var(--line);
   background: #ffffff;
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-width: 180px;
+  max-width: 470px;
+}
+
+.brand img {
+  display: block;
+  height: auto;
+  max-height: 84px;
+  max-width: 100%;
 }
 
 .eyebrow {
@@ -90,10 +104,6 @@ main {
 
 .public-mode .topbar {
   position: static;
-}
-
-.public-mode .topbar h1 {
-  font-size: 22px;
 }
 
 .tab {
@@ -584,6 +594,10 @@ textarea {
   .toolbar-actions {
     justify-content: start;
   }
+
+  .brand {
+    max-width: 360px;
+  }
 }
 
 @media (max-width: 520px) {
@@ -604,5 +618,9 @@ textarea {
   .bar-track {
     grid-column: 1 / -1;
     order: 3;
+  }
+
+  .brand img {
+    max-height: 58px;
   }
 }
