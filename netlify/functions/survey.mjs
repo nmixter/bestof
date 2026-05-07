@@ -117,7 +117,7 @@ function mergeSubmittedOptions(options, survey, response) {
       const existing = options[question.id] || question.options || [];
       const baseOptions = existing.filter((option) => option && option !== "Other");
       const hasAnswer = baseOptions.some((option) => normalizeChoice(option) === normalizeChoice(answer));
-      options[question.id] = hasAnswer ? [...baseOptions, "Other"] : [...baseOptions, answer, "Other"];
+      options[question.id] = hasAnswer ? [...sortChoiceOptions(baseOptions), "Other"] : [...sortChoiceOptions([...baseOptions, answer]), "Other"];
     });
 }
 
@@ -146,6 +146,22 @@ function normalizeChoice(value) {
     .replace(/&/g, "and")
     .replace(/\b(the|and|restaurant|cafe|coffee|shop|school|center|centre|company|co|inc|llc)\b/g, "")
     .replace(/[^a-z0-9]/g, "");
+}
+
+function sortChoiceOptions(options) {
+  const seen = new Set();
+  const cleaned = [];
+
+  options
+    .filter((option) => option && option !== "Other")
+    .forEach((option) => {
+      const key = normalizeChoice(option);
+      if (seen.has(key)) return;
+      seen.add(key);
+      cleaned.push(option);
+    });
+
+  return cleaned.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 }
 
 function safeEqual(a, b) {
