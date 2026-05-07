@@ -79,11 +79,30 @@ const ballotCategories = [
   "Preschool",
   "Private School",
   "Place to celebrate kid's Birthday",
-  "Place to celebrate an adult Birthday or milestone"
+  "Place to celebrate an adult Birthday or milestone",
+  "Dog Friendly Restaurants",
+  "Dog Friendly Hikes",
+  "Dog Friendly Beaches"
 ];
 
 function slugify(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function sortChoiceOptions(options) {
+  const seen = new Set();
+  const cleaned = [];
+
+  options
+    .filter((option) => option && option !== "Other")
+    .forEach((option) => {
+      const key = normalizeChoice(option);
+      if (seen.has(key)) return;
+      seen.add(key);
+      cleaned.push(option);
+    });
+
+  return cleaned.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 }
 
 function categoryGroup(category) {
@@ -95,79 +114,83 @@ function categoryGroup(category) {
   if (["Hair Salon", "Spa", "Massage Therapist", "Nail Salon"].includes(category)) return "Personal Care";
   if (["Kennel", "Pet supplies", "Veterinarian"].includes(category)) return "Pets";
   if (["Charter", "Elementary", "Middle School", "High School", "Preschool", "Private School"].includes(category)) return "Schools";
+  if (category.startsWith("Dog Friendly")) return "Dog Friendly";
   if (category.includes("Birthday")) return "Celebrations";
   if (["Bakery", "Coffee Shop", "Breakfast", "Deli", "Dinner", "Fine Dining", "Grocery Store", "Ice Cream", "Pizza", "Sushi", "Taqueria", "To Go", "Family Friendly Restaurant"].includes(category)) return "Food";
   return "Shopping";
 }
 
 const categoryOptions = {
-  "Day Camp": ["Santa Cruz County Parks Summer Camps", "City of Santa Cruz Parks & Recreation", "Scotts Valley Recreation", "Santa Cruz SPCA Kids Camp", "Seymour Marine Discovery Center Ocean Explorers", "Santa Cruz Museum of Natural History Camps", "Tannery World Dance & Cultural Center Camp", "Mount Hermon Adventures", "Kennolyn Camps", "Camp Gateway"],
-  "Residential Camp": ["Kennolyn Camps", "Mount Hermon Redwood Camp", "Camp Hammer", "YMCA Camp Campbell", "Camp Krem", "Monte Toyon Camp and Conference Center"],
+  "Day Camp": ["Camp Gateway", "City of Santa Cruz Parks & Recreation", "International Academy of Dance Santa Cruz", "Kennolyn Camps", "Mount Hermon Adventures", "Mount Madonna School", "Santa Cruz County Parks Summer Camps", "Santa Cruz Museum of Natural History Camps", "Santa Cruz SPCA Kids Camp", "Scotts Valley Recreation", "Seymour Marine Discovery Center Ocean Explorers", "Tannery World Dance & Cultural Center Camp"],
+  "Residential Camp": ["Camp Hammer", "Camp Krem", "Kennolyn Camps", "Monte Toyon Camp and Conference Center", "Mount Hermon Redwood Camp", "Redwood Music Teen Camp", "YMCA Camp Campbell"],
   "Bakery": ["Gayle's Bakery & Rosticceria", "The Buttery", "Companion Bakeshop", "Kelly's French Bakery", "The Grove Cafe & Bakery", "Manresa Bread", "Emily's Bakery", "Pacific Cookie Company", "Beckmann's Old World Bakery", "Aldo's Bakery"],
   "Coffee Shop": ["Verve Coffee Roasters", "Cat & Cloud Coffee", "11th Hour Coffee", "Santa Cruz Coffee Roasting Co.", "Lulu Carpenter's", "Firefly Coffee House", "People's Coffee", "Java Junction", "Mariposa Coffee Bar", "Coffeeville"],
   "Breakfast": ["Zachary's Restaurant", "Linda's Seabreeze Cafe", "Harbor Cafe", "Cafe Brasil", "Walnut Avenue Cafe", "The Picnic Basket", "Silver Spur", "Red Apple Cafe", "The Grove Cafe & Bakery", "Avenue Cafe"],
   "Deli": ["Zoccoli's Delicatessen", "Seabright Deli", "Erik's DeliCafe", "Garden Deli", "Ben Lomond Market", "Staff of Life Natural Foods Deli", "New Leaf Community Markets Deli", "Shopper's Corner Deli", "Aptos Street BBQ", "The Picnic Basket"],
-  "Dinner": ["Laili Restaurant", "Hula's Island Grill", "Shadowbrook Restaurant", "Cafe Sparrow", "Venus Spirits Cocktails & Kitchen", "Oswald Restaurant", "The Point Chophouse", "Sanderlings Restaurant", "Hindquarter Bar & Grille", "Ideal Bar & Grill"],
-  "Fine Dining": ["Shadowbrook Restaurant", "Cafe Sparrow", "Sanderlings Restaurant", "Oswald Restaurant", "Laili Restaurant", "Gabriella Cafe", "Venus Spirits Cocktails & Kitchen", "The Point Chophouse", "Home Restaurant", "La Posta"],
+  "Dinner": ["Bantam", "Crow's Nest Restaurant", "Hindquarter Bar & Grille", "Hula's Island Grill", "Ideal Bar & Grill", "Laili Restaurant", "Oswald Restaurant", "Sanderlings Restaurant", "Shadowbrook Restaurant", "The Point Chophouse", "Venus Spirits Cocktails & Kitchen"],
+  "Fine Dining": ["Gabriella Cafe", "Home Restaurant", "Laili Restaurant", "La Posta", "Oswald Restaurant", "Sanderlings Restaurant", "Shadowbrook Restaurant", "The Point Chophouse", "Venus Spirits Cocktails & Kitchen"],
   "Grocery Store": ["New Leaf Community Markets", "Staff of Life Natural Foods", "Shopper's Corner", "Deluxe Foods of Aptos", "Ben Lomond Market", "Grocery Outlet Santa Cruz", "Safeway Capitola", "Nob Hill Foods Scotts Valley", "Whole Foods Market Santa Cruz", "Wild Roots Market"],
   "Ice Cream": ["The Penny Ice Creamery", "Marianne's Ice Cream", "Mission Hill Creamery", "Polar Bear Ice Cream", "Marini's Candies", "Pacific Cookie Company", "Boardwalk Dipper", "Sno-White Drive-In", "Fosters Freeze Watsonville", "Cold Stone Creamery Capitola"],
   "Pizza": ["Woodstock's Pizza", "Pizza My Heart", "Pizzeria Avanti", "Engfer Pizza Works", "Pleasure Pizza", "Bantam", "La Bufala", "Tony & Alba's Pizza", "Upper Crust Pizza & Pasta", "Bookie's Pizza"],
   "Sushi": ["Mobo Sushi", "Akira Sushi", "Sushi Garden", "Geisha Japanese Restaurant & Tea House", "Sushi Totoro", "Otoro Sushi", "Sushi Mori", "Naka Sushi", "Kaito Japanese Restaurant", "Shogun Japanese Restaurant"],
   "Taqueria": ["Taqueria Vallarta", "Los Pericos Taqueria", "Taqueria Santa Cruz", "Taqueria Los Gallos", "Taqueria Agave", "Taqueria La Cabana", "Taqueria Los Pericos", "Taqueria Mi Tierra", "Taqueria Jalapenos", "Taqueria El Dandy"],
-  "To Go": ["The Picnic Basket", "Seabright Deli", "Zoccoli's Delicatessen", "Pizza My Heart", "Taqueria Vallarta", "Aptos Street BBQ", "Samba Rock Acai Cafe", "New Leaf Community Markets Deli", "Staff of Life Natural Foods Deli", "Boardwalk Grille"],
-  "Family Friendly Restaurant": ["Santa Cruz Beach Boardwalk Restaurants", "Ideal Bar & Grill", "Woodstock's Pizza", "Pizza My Heart", "Betty Burgers", "Cafe Brasil", "Harbor Cafe", "Sno-White Drive-In", "Red Apple Cafe", "Aptos Street BBQ"],
-  "After School Care": ["Boys & Girls Clubs of Santa Cruz County", "Santa Cruz City Schools After School Programs", "Campus Kids Connection", "YMCA of San Benito County Child Care", "City of Watsonville Parks and Community Services", "Scotts Valley Recreation", "Mount Madonna School Extended Care", "Gateway School Extended Care", "Baymonte Christian School Extended Care", "Orchard School Extended Care"],
-  "Art": ["Santa Cruz Mountains Art Center", "Palace Art & Office Supply", "Tannery Arts Center", "Santa Cruz Art Center", "Arts Council Santa Cruz County", "Santa Cruz Museum of Art & History", "Radius Gallery", "Lenz Arts", "Cabrillo Gallery", "Felix Kulpa Gallery"],
+  "To Go": ["Aptos Street BBQ", "Boardwalk Grille", "Charlie Hong Kong", "New Leaf Community Markets Deli", "Pizza My Heart", "Pretty Good Advice", "Samba Rock Acai Cafe", "Seabright Deli", "Staff of Life Natural Foods Deli", "Taqueria Vallarta", "The Picnic Basket", "Zoccoli's Delicatessen"],
+  "Family Friendly Restaurant": ["Aptos Street BBQ", "Betty Burgers", "Cafe Brasil", "Carpo's Restaurant", "Harbor Cafe", "Ideal Bar & Grill", "Kianti's Pizza & Pasta Bar", "Pizza My Heart", "Red Apple Cafe", "Santa Cruz Beach Boardwalk Restaurants", "Sno-White Drive-In", "The Hideout", "Woodstock's Pizza"],
+  "After School Care": ["Baymonte Christian School Extended Care", "Be Natural Music", "Boys & Girls Clubs of Santa Cruz County", "Campus Kids Connection", "City of Watsonville Parks and Community Services", "Gateway School Extended Care", "Mount Madonna School Extended Care", "Orchard School Extended Care", "Santa Cruz City Schools After School Programs", "Scotts Valley Recreation", "YMCA of San Benito County Child Care"],
+  "Art": ["Art Factory", "Arts Council Santa Cruz County", "Cabrillo Gallery", "Drawn2Art", "Felix Kulpa Gallery", "Lenz Arts", "Palace Art & Office Supply", "Radius Gallery", "Santa Cruz Art Center", "Santa Cruz Mountains Art Center", "Santa Cruz Museum of Art & History", "Studio Sprout", "Tannery Arts Center"],
   "Dance": ["Tannery World Dance & Cultural Center", "Motion Pacific", "International Academy of Dance Santa Cruz", "Dancenter", "No Limits Dance & Performing Arts", "Santa Cruz Ballet Theatre", "Agape Dance Academy", "Pacific Arts Complex", "Watsonville Taiko", "Santa Cruz Dance Company"],
-  "Music": ["Everyone's Music School", "Be Natural Music", "Kuumbwa Jazz", "Santa Cruz Symphony", "Santa Cruz Music School", "Sylvan Music", "More Music Santa Cruz", "Cabrillo Festival of Contemporary Music", "Abbott Square Music", "Pacific Voices"],
-  "Sport": ["Santa Cruz County Youth Soccer Club", "Santa Cruz Little League", "Santa Cruz Warriors Basketball Academy", "Santa Cruz Track Club", "Santa Cruz County Cycling Club", "Scotts Valley Sportsmen's Club", "Aptos Soccer Club", "Santa Cruz Rugby", "Parks & Recreation Santa Cruz Sports", "Watsonville Youth Soccer League"],
+  "Music": ["Be Natural Music", "Cabrillo Festival of Contemporary Music", "Community Music School of Santa Cruz", "Everyone's Music School", "Kuumbwa Jazz", "More Music Santa Cruz", "MusicalMe", "Pacific Voices", "Santa Cruz Music School", "Santa Cruz Symphony", "Sylvan Music"],
+  "Sport": ["Aptos Soccer Club", "International Academy of Dance Santa Cruz", "Parks & Recreation Santa Cruz Sports", "Santa Cruz County Cycling Club", "Santa Cruz County Youth Soccer Club", "Santa Cruz Little League", "Santa Cruz Rugby", "Santa Cruz Track Club", "Santa Cruz Warriors Basketball Academy", "Scotts Valley Sportsmen's Club", "Watsonville Youth Soccer League"],
   "Swimming": ["Jim Booth Swim School", "Adventure Sports Unlimited", "Santa Cruz Swim School", "Simpkins Family Swim Center", "Seahorse Swim School", "Watsonville YMCA", "Santa Cruz Masters Aquatics", "Cabrillo College Pool", "Scotts Valley Recreation Swim", "Aptos Cabrillo Swim Club"],
-  "Theater": ["Jewel Theatre Company", "Santa Cruz Shakespeare", "Cabrillo Stage", "Mountain Community Theater", "Actors' Theatre", "The 418 Project", "Colligan Theater", "Kuumbwa Jazz Center", "Rio Theatre", "Henry J. Mello Center"],
-  "Gymnastics": ["Santa Cruz Gymnastics Center", "Ohana Gymnastics", "JuneBug's Gym", "Toadal Fitness Gymnastics", "Scotts Valley Recreation Gymnastics"],
-  "Bank": ["Santa Cruz County Bank", "Bay Federal Credit Union", "Santa Cruz Community Credit Union", "Comerica Bank", "Bank of America", "Wells Fargo", "Chase Bank", "U.S. Bank", "Comerica Bank Aptos", "Lighthouse Bank"],
+  "Theater": ["Actors' Theatre", "All About Theatre", "Cabrillo Stage", "Colligan Theater", "Henry J. Mello Center", "Jewel Theatre Company", "Mountain Community Theater", "Rio Theatre", "Santa Cruz Shakespeare", "The 418 Project", "WEST Performing Arts"],
+  "Gymnastics": ["Community Mountain Gym", "JuneBug's Gym", "Santa Cruz Gymnastics Center", "Scotts Valley Recreation Gymnastics"],
+  "Bank": ["Bank of America", "Bay Federal Credit Union", "Chase Bank", "Comerica Bank", "Comerica Bank Aptos", "Lighthouse Bank", "Santa Cruz Community Credit Union", "Santa Cruz County Bank", "U.S. Bank", "Wells Fargo", "West Coast Community Bank"],
   "Place/House of Worship": ["Twin Lakes Church", "Holy Cross Catholic Church", "Temple Beth El", "St. Joseph's Catholic Church", "Calvary Episcopal Church", "Peace United Church of Christ", "Vintage Faith Church", "Santa Cruz Bible Church", "Resurrection Catholic Community", "Watsonville Buddhist Temple"],
   "Insurance": ["State Farm - Larry Pearson", "State Farm - Stacey Ziegler", "Farmers Insurance - Santa Cruz", "Allstate Insurance Santa Cruz", "Goosehead Insurance Santa Cruz", "Coastal Insurance Services", "HUB International Santa Cruz", "Bargetto Insurance", "Acrisure Santa Cruz", "Santa Cruz Insurance Services"],
-  "Photographer": ["Crystal Birns Photography", "De Joy Photography", "Kelley Williams Photography", "Michele Duffy Photography", "Kimberly Sandoval Photography", "Viera Photographics", "Rebecca Stark Photography", "Renae Zipfel Photography", "Shmuel Thaler Photography", "Santa Cruz Photo Booth"],
-  "Realtor": ["Anderson Christie Real Estate", "Bailey Properties", "David Lyng Real Estate", "Sotheby's International Realty Santa Cruz", "Coldwell Banker Realty Santa Cruz", "Keller Williams Realty Santa Cruz", "eXp Realty Santa Cruz", "Room Real Estate", "Montalvo Homes & Estates", "Monterey Bay Properties"],
-  "Dentist/Orthodontist": ["Santa Cruz Dental Group", "Dientes Community Dental Care", "Santa Cruz Orthodontics", "Lighthouse Dental", "Watsonville Family Dental", "Kids Dental Specialists", "Aptos Dental Care", "Capitola Kids Dentistry", "Scotts Valley Dental Care", "Western Dental Watsonville"],
-  "Fitness": ["Toadal Fitness", "Santa Cruz Power Fitness", "Pacific Edge Climbing Gym", "Minorsan Self-Defense & Fitness", "Santa Cruz CORE Fitness + Rehab", "Westside Barbell Club", "CrossFit Santa Cruz", "In-Shape Capitola", "Watsonville Family YMCA", "Santa Cruz Yoga"],
+  "Photographer": ["Alicia Telfer Photography", "Crystal Birns Photography", "De Joy Photography", "Kelley Williams Photography", "Kimberly Sandoval Photography", "Michele Duffy Photography", "Rebecca Stark Photography", "Renae Zipfel Photography", "Santa Cruz Photo Booth", "Shmuel Thaler Photography", "Viera Photographics"],
+  "Realtor": ["Anderson Christie Real Estate", "Bailey Properties", "Coldwell Banker Realty Santa Cruz", "David Lyng Real Estate", "Eli Karon, Karon Properties", "eXp Realty Santa Cruz", "Justin McNabb", "Keller Williams Realty Santa Cruz", "Montalvo Homes & Estates", "Monterey Bay Properties", "Room Real Estate", "Sotheby's International Realty Santa Cruz"],
+  "Dentist/Orthodontist": ["Alison K. Jackson, D.D.S. Children's Dentistry", "Aptos Dental Care", "Benedict Orthodontics", "Capitola Kids Dentistry", "Dientes Community Dental Care", "Kids Dental Specialists", "Lighthouse Dental", "Santa Cruz Dental Group", "Santa Cruz Orthodontics", "Scotts Valley Dental Care", "Watsonville Family Dental", "Western Dental Watsonville"],
+  "Fitness": ["CrossFit Santa Cruz", "Enterprise Fitness Center", "In-Shape Capitola", "Minorsan Self-Defense & Fitness", "Pacific Edge Climbing Gym", "Santa Cruz CORE Fitness + Rehab", "Santa Cruz Power Fitness", "Santa Cruz Yoga", "Watsonville Family YMCA", "Westside Barbell Club"],
   "Hospital": ["Dominican Hospital", "Watsonville Community Hospital", "Sutter Maternity & Surgery Center of Santa Cruz", "Santa Cruz County Health Services Agency", "Palo Alto Medical Foundation Santa Cruz", "Salud Para La Gente"],
-  "Pediatrician": ["Palo Alto Medical Foundation Pediatrics Santa Cruz", "Santa Cruz Community Health", "Dignity Health Medical Group Dominican", "Salud Para La Gente Pediatrics", "Pediatric Medical Group of Santa Cruz", "Sutter Health Pediatrics Capitola", "Watsonville Health Center", "Sutter Pediatrics Aptos"],
-  "Reproductive": ["Planned Parenthood Mar Monte Santa Cruz", "Dignity Health Dominican Women's Health", "Palo Alto Medical Foundation Obstetrics and Gynecology", "Santa Cruz Community Health Women's Health", "Salud Para La Gente Women's Health", "Sutter Maternity & Surgery Center of Santa Cruz"],
-  "Midwife/Doula": ["Birth Network of Santa Cruz County", "Santa Cruz Midwives", "Birth Center of Santa Cruz", "Luma Birth", "Pacific Maternity", "Santa Cruz Doula Collective"],
-  "Therapist": ["Family Service Agency of the Central Coast", "Pajaro Valley Prevention and Student Assistance", "Encompass Community Services", "Santa Cruz Community Counseling Center", "The Camp Recovery Center", "Janus of Santa Cruz", "Monarch Services", "NAMI Santa Cruz County", "Balance4Kids", "New Life Community Services"],
+  "Pediatrician": ["Bruce Block, M.D. - Palo Alto Medical Foundation", "Dignity Health Medical Group Dominican", "Nicole Marsico, M.D.", "Palo Alto Medical Foundation Pediatrics Santa Cruz", "Pediatric Medical Group of Santa Cruz", "Salud Para La Gente Pediatrics", "Santa Cruz Community Health", "Sutter Health Pediatrics Capitola", "Sutter Pediatrics Aptos", "Watsonville Health Center"],
+  "Reproductive": ["Dignity Health Dominican Women's Health", "Dr. Gail Oderman", "Palo Alto Medical Foundation Obstetrics and Gynecology", "Planned Parenthood Mar Monte Santa Cruz", "Salud Para La Gente Women's Health", "Santa Cruz Community Health Women's Health", "Sutter Maternity & Surgery Center of Santa Cruz"],
+  "Midwife/Doula": ["Birth Center of Santa Cruz", "Birth Network of Santa Cruz County", "Britta Paterson", "Luma Birth", "Nora Yerena", "Pacific Maternity", "Santa Cruz Doula Collective", "Santa Cruz Midwives"],
+  "Therapist": ["Balance4Kids", "Center for Child and Adolescent Mental Health", "Encompass Community Services", "Family Service Agency of the Central Coast", "Janus of Santa Cruz", "Monarch Services", "NAMI Santa Cruz County", "New Life Community Services", "Pajaro Valley Prevention and Student Assistance", "Santa Cruz Community Counseling Center", "The Camp Recovery Center"],
   "Specialist": ["Santa Cruz Medical Clinic", "Palo Alto Medical Foundation Santa Cruz", "Dignity Health Medical Group Dominican", "Santa Cruz Orthopaedic Institute", "Santa Cruz Ear Nose and Throat", "Santa Cruz Dermatology", "Santa Cruz Eye Medical Group", "Central Coast Allergy and Asthma", "Sutter Health Santa Cruz", "Salud Para La Gente"],
-  "Beach": ["Natural Bridges State Beach", "Seacliff State Beach", "New Brighton State Beach", "Twin Lakes State Beach", "Seabright State Beach", "Main Beach", "Capitola Beach", "Rio Del Mar State Beach", "Manresa State Beach", "Sunset State Beach"],
-  "Park": ["Wilder Ranch State Park", "Henry Cowell Redwoods State Park", "Roaring Camp Railroads", "Anna Jean Cummings Park", "Skypark", "Harvey West Park", "DeLaveaga Park", "Pinto Lake County Park", "Quail Hollow Ranch County Park", "Aptos Village Park"],
+  "Beach": ["Capitola Beach", "Main Beach", "Manresa State Beach", "Natural Bridges State Beach", "New Brighton State Beach", "Rio Del Mar State Beach", "Seabright State Beach", "Seacliff State Beach", "Sunset State Beach", "Twin Lakes State Beach"],
+  "Park": ["Anna Jean Cummings Park", "Aptos Village Park", "DeLaveaga Park", "Harvey West Park", "Leo's Haven", "Ocean View Park", "Pinto Lake County Park", "Quail Hollow Ranch County Park", "Skypark", "Wilder Ranch State Park"],
   "Hiking": ["Wilder Ranch State Park", "Henry Cowell Redwoods State Park", "The Forest of Nisene Marks State Park", "Pogonip Open Space", "Quail Hollow Ranch County Park", "Fall Creek Unit", "Moore Creek Preserve", "Arana Gulch", "DeLaveaga Park", "Byrne-Milliron Forest"],
-  "Amusement Park": ["Santa Cruz Beach Boardwalk", "Roaring Camp Railroads", "Mount Hermon Adventures", "Seymour Marine Discovery Center", "Gilroy Gardens", "Neptune's Kingdom", "Santa Cruz Wharf", "Boardwalk Bowl", "Skypark", "Santa Cruz Roller Palladium"],
-  "Hair Salon": ["Faust Salon Downtown", "Lavish Salon", "Salon on the Square", "Nirvana Salon", "Parlour at the Point", "Arrow Beauty Bar", "Pleasure Point Hair Design", "Opal Spa & Boutique", "Yoso Wellness Spa", "Watsonville Hair Company"],
-  "Spa": ["Well Within Spa", "Tea House Spa", "Chaminade Resort & Spa", "Yoso Wellness Spa", "Opal Spa & Boutique", "Sage Float Spa", "Vital Body Therapy", "Santa Cruz Ayurveda", "SkinSpirit Santa Cruz", "Coco Spa"],
-  "Massage Therapist": ["Vital Body Therapy", "Tea House Spa", "Well Within Spa", "Chaminade Resort & Spa", "Yoso Wellness Spa", "Santa Cruz CORE Fitness + Rehab", "Sage Float Spa", "Opal Spa & Boutique", "Santa Cruz Massage Therapy", "Aptos Massage Therapy"],
-  "Nail Salon": ["Opal Spa & Boutique", "Perfect Nails Santa Cruz", "Nail Club Santa Cruz", "Capitola Nails", "Watsonville Nails", "Aptos Nails", "Scotts Valley Nails", "Ocean Nails", "Nail Spa Santa Cruz", "Diva Nails"],
-  "Kennel": ["Bed & Biscuits Groomingdales", "Pawsitive Styles", "Kennel Club Loma Prieta", "Canine Corral", "Santa Cruz Pet Resort", "Doggie Dude Ranch", "Woofpack", "Aptos-Creekside Pet Hospital Boarding", "Animal Hospital of Soquel Boarding", "Boulder Creek Veterinary Clinic Boarding"],
-  "Pet supplies": ["Pet Pals Discount Pet Food & Supplies", "Aptos Feed & Pet Supply", "PetSmart Capitola", "Petco Santa Cruz", "General Feed & Seed", "Boulder Creek Feed & Pet Supply", "Capitola Feed & Pet", "The Whole Pet Vet Shop", "Westside Farm and Feed", "Ben Lomond Feed"],
-  "Veterinarian": ["Pacific & Santa Cruz Veterinary Specialists", "Aptos-Creekside Pet Hospital", "Animal Hospital of Soquel", "Scotts Valley Veterinary Clinic", "Westside Animal Hospital", "Capitola Veterinary Hospital", "Boulder Creek Veterinary Clinic", "Adobe Animal Hospital of Soquel", "Companion Animal Hospital", "The Whole Pet Vet Hospital and Wellness Center"],
+  "Amusement Park": ["Boardwalk Bowl", "Mount Hermon Adventures", "Neptune's Kingdom", "Roaring Camp Railroads", "Santa Cruz Beach Boardwalk", "Santa Cruz Roller Palladium", "Santa Cruz Wharf", "Seymour Marine Discovery Center", "Skypark"],
+  "Hair Salon": ["Arrow Beauty Bar", "Faust Salon Downtown", "Lavish Salon", "Nirvana Salon", "Opal Spa & Boutique", "Parlour at the Point", "Pleasure Point Hair Design", "Salon on the Square", "Seaweed Hair Design", "Watsonville Hair Company", "Yoso Wellness Spa"],
+  "Spa": ["Chaminade Resort & Spa", "Coco Spa", "Opal Spa & Boutique", "Sage Float Spa", "Santa Cruz Ayurveda", "SkinSpirit Santa Cruz", "Tea House Spa", "The Santa Cruz Spa", "Vital Body Therapy", "Well Within Spa", "Yoso Wellness Spa"],
+  "Massage Therapist": ["Aptos Massage Therapy", "Chaminade Resort & Spa", "Opal Spa & Boutique", "Positive Pressure Physical Therapy", "Sage Float Spa", "Santa Cruz CORE Fitness + Rehab", "Santa Cruz Massage Therapy", "Tea House Spa", "Vital Body Therapy", "Well Within Spa", "Yoso Wellness Spa"],
+  "Nail Salon": ["Aptos Nails", "Capitola Nails", "Diva Nails", "Nail Club Santa Cruz", "Nail Spa Santa Cruz", "Ocean Nails", "Opal Spa & Boutique", "Perfect Nails Santa Cruz", "Scotts Valley Nails", "Tracy's Nails", "Watsonville Nails"],
+  "Kennel": ["Animal Hospital of Soquel Boarding", "Aptos-Creekside Pet Hospital Boarding", "Bed & Biscuits Groomingdales", "Boulder Creek Veterinary Clinic Boarding", "Canine Corral", "Doggie Dude Ranch", "Kennel Club Loma Prieta", "Pawsitive Styles", "Santa Cruz Pet Resort", "The Velvet Coat", "Woofpack"],
+  "Pet supplies": ["Aptos Feed & Pet Supply", "Ben Lomond Feed", "Boulder Creek Feed & Pet Supply", "Capitola Feed & Pet", "General Feed & Seed", "Pet Pals Discount Pet Food & Supplies", "Petco Santa Cruz", "PetSmart Capitola", "The Whole Pet Vet Shop", "Westside Farm and Feed"],
+  "Veterinarian": ["Adobe Animal Hospital of Soquel", "Animal Hospital of Soquel", "Aptos-Creekside Pet Hospital", "Boulder Creek Veterinary Clinic", "Capitola Veterinary Hospital", "Companion Animal Hospital", "Gustin - Van Every Mobile Veterinary Medicine", "Pacific & Santa Cruz Veterinary Specialists", "Scotts Valley Veterinary Clinic", "The Whole Pet Vet Hospital and Wellness Center", "Ty McConnell DVM", "Westside Animal Hospital"],
   "Radio Station": ["KSQD Community Radio", "KZSC Santa Cruz", "KPIG Radio", "KAZU", "KION 1460", "KMBY 1240", "KDON 102.5", "KBOQ 103.9", "KOCN 105.1", "KUSP Archives"],
   "Art Supplies": ["Palace Art & Office Supply", "Lenz Arts", "Beverly's Fabrics", "Santa Cruz Art Center", "Bookshop Santa Cruz Art Supplies", "Michaels Capitola", "Wild Roots Market Floral and Craft", "Felton Mercantile", "Mountain Feed and Farm Supply", "Artisans & Agency"],
-  "Baby": ["Jelli Beanz Kids Resale", "Stripe Design Group", "Bookshop Santa Cruz", "Target Capitola", "Baby Bloomers", "Little Trends", "Bunny's Shoes", "Toys N Tech", "Children's Discovery Museum Store", "New Leaf Community Markets Baby"],
-  "Bike Shop": ["Spokesman Bicycles", "Another Bike Shop", "Epicenter Cycling", "Family Cycling Center", "Santa Cruz Bicycles", "Bicycle Trip", "Cycle Works", "Shuttle Smith Adventures", "Scotts Valley Cycle Sport", "Watsonville Cyclery"],
-  "Children's Clothing": ["Jelli Beanz Kids Resale", "Stripe Design Group", "Bunny's Shoes", "Gap Capitola Mall", "Target Capitola", "O'Neill Surf Shop", "Rip Curl Capitola", "Patagonia Outlet Santa Cruz", "Toys N Tech", "Baby Bloomers"],
-  "Gift Shop": ["Bookshop Santa Cruz", "Stripe Design Group", "Botanic and Luxe", "Home/Work", "Artisans & Agency", "Annieglass", "Santa Cruz Museum of Art & History Store", "Seymour Marine Discovery Center Store", "Santa Cruz Beach Boardwalk Gift Shops", "Capitola Mercantile"],
-  "Home Decor": ["Stripe Design Group", "Botanic and Luxe", "Home/Work", "Annieglass", "Dig Gardens", "Wisteria Antiques", "Santa Cruz Reclaimed", "Berdels", "Lenz Arts", "World Market Santa Cruz"],
-  "Nursery/Garden": ["Dig Gardens", "San Lorenzo Garden Center", "Mountain Feed and Farm Supply", "Central Home Supply", "ProBuild Garden Center", "Boulder Creek Nursery", "The Garden Company", "Far West Nursery", "Scarborough Gardens", "Alladin Nursery"],
-  "Skate/ Surf": ["O'Neill Surf Shop", "Rip Curl Santa Cruz", "Billabong Santa Cruz", "Santa Cruz Surf Shop", "Arrow Surf & Sport", "Freeline Surf Shop", "Midtown Surf Shop", "Pacific Wave", "Santa Cruz Skateboards", "NHS Fun Factory"],
+  "Baby": ["Baby Bloomers", "Bookshop Santa Cruz", "Bunny's Shoes", "Children's Discovery Museum Store", "Jelli Beanz Kids Resale", "Little Trends", "Mini Mint", "New Leaf Community Markets Baby", "Stripe Design Group", "Target Capitola", "Toys N Tech"],
+  "Bike Shop": ["Another Bike Shop", "Bicycle Trip", "Cycle Works", "Epicenter Cycling", "Family Cycling Center", "Santa Cruz Bicycles", "Scotts Valley Cycle Sport", "Shuttle Smith Adventures", "Spokesman Bicycles", "Watsonville Cyclery"],
+  "Children's Clothing": ["Baby Bloomers", "Bunny's Shoes", "Gap Capitola Mall", "Jelli Beanz Kids Resale", "Lively Kids", "O'Neill Surf Shop", "Patagonia Outlet Santa Cruz", "Rip Curl Capitola", "Shop Lively", "Stripe Design Group", "Target Capitola", "Toys N Tech"],
+  "Gift Shop": ["Annieglass", "Artisans & Agency", "Bookshop Santa Cruz", "Botanic and Luxe", "Capitola Mercantile", "Dig Gardens", "Home/Work", "Santa Cruz Beach Boardwalk Gift Shops", "Santa Cruz Museum of Art & History Store", "Seymour Marine Discovery Center Store", "Stripe Design Group", "Zinnia's"],
+  "Home Decor": ["Annieglass", "Berdels", "Botanic and Luxe", "Dig Gardens", "Home/Work", "Lenz Arts", "Santa Cruz Reclaimed", "Stripe Design Group", "Wisteria Antiques", "World Market Santa Cruz"],
+  "Nursery/Garden": ["Alladin Nursery", "Boulder Creek Nursery", "Central Home Supply", "Dig Gardens", "Far West Nursery", "Mountain Feed and Farm Supply", "ProBuild Garden Center", "San Lorenzo Garden Center", "Scarborough Gardens", "The Garden Company"],
+  "Skate/ Surf": ["Arrow Surf & Sport", "Bill's Wheels Skateshop", "Billabong Santa Cruz", "Freeline Surf Shop", "Midtown Surf Shop", "NHS Fun Factory", "O'Neill Surf Shop", "Pacific Wave", "Rip Curl Santa Cruz", "Santa Cruz Skateboards", "Santa Cruz Surf Shop"],
   "Teen Clothing": ["Pacific Wave", "Berdels", "O'Neill Surf Shop", "Rip Curl Capitola", "Patagonia Outlet Santa Cruz", "Stripe Design Group", "Billabong Santa Cruz", "Gap Capitola Mall", "Target Capitola", "Urban Outfitters Santa Cruz"],
-  "Toys": ["Toys N Tech", "Bookshop Santa Cruz", "Atlantis Fantasyworld", "Comicopolis", "Children's Discovery Museum Store", "Santa Cruz Beach Boardwalk Gift Shops", "Target Capitola", "Seymour Marine Discovery Center Store", "Marini's Candies", "Bunny's Shoes"],
-  "Women's Clothing": ["Stripe Design Group", "Cameron Marks", "Berdels", "Pacific Wave", "Patagonia Outlet Santa Cruz", "O'Neill Surf Shop", "Rip Curl Capitola", "Wallflower Boutique", "Botanic and Luxe", "Gap Capitola Mall"],
-  "Charter": ["Pacific Collegiate School", "Santa Cruz Montessori Charter School", "Linscott Charter School", "Ocean Alternative Education Center", "Cypress Charter High School", "Delta Charter High School", "Ceiba College Preparatory Academy", "Nature Academy", "Alternative Family Education", "Watsonville Charter School of the Arts"],
-  "Elementary": ["Westlake Elementary School", "Bay View Elementary School", "Gault Elementary School", "DeLaveaga Elementary School", "Main Street Elementary School", "Vine Hill Elementary School", "Mar Vista Elementary School", "Rio del Mar Elementary School", "Valencia Elementary School", "Amesti Elementary School"],
-  "Middle School": ["Mission Hill Middle School", "Branciforte Middle School", "Shoreline Middle School", "New Brighton Middle School", "Scotts Valley Middle School", "Aptos Junior High School", "Rolling Hills Middle School", "Pajaro Middle School", "E. A. Hall Middle School", "San Lorenzo Valley Middle School"],
-  "High School": ["Santa Cruz High School", "Harbor High School", "Soquel High School", "Aptos High School", "Scotts Valley High School", "Watsonville High School", "Pajaro Valley High School", "San Lorenzo Valley High School", "Pacific Collegiate School", "Cypress Charter High School"],
-  "Preschool": ["Baymonte Christian Preschool", "Gateway School Preschool", "Santa Cruz Montessori", "Mount Madonna School Preschool", "Rocking Horse Ranch Preschool", "Campus Kids Connection Preschool", "Orchard School Preschool", "St. Lawrence Academy Preschool", "Good Shepherd Catholic School Preschool", "Holy Cross Preschool"],
-  "Private School": ["Kirby School", "Baymonte Christian School", "Gateway School", "Mount Madonna School", "Santa Cruz Montessori", "Orchard School", "Good Shepherd Catholic School", "Holy Cross School", "St. Francis High School", "Salesian Elementary and Junior High"],
-  "Place to celebrate kid's Birthday": ["Santa Cruz Beach Boardwalk", "Santa Cruz Children's Museum of Discovery", "Seymour Marine Discovery Center", "Roaring Camp Railroads", "JuneBug's Gym", "Santa Cruz Gymnastics Center", "Boardwalk Bowl", "Mount Hermon Adventures", "Santa Cruz Roller Palladium", "Skypark"],
-  "Place to celebrate an adult Birthday or milestone": ["Shadowbrook Restaurant", "Chaminade Resort & Spa", "Sanderlings Restaurant", "Venus Spirits Cocktails & Kitchen", "The Dream Inn", "Oswald Restaurant", "Laili Restaurant", "Kuumbwa Jazz", "Santa Cruz Mountain Brewing", "Bargetto Winery"]
+  "Toys": ["Atlantis Fantasyworld", "Bookshop Santa Cruz", "Bunny's Shoes", "Childish", "Children's Discovery Museum Store", "Comicopolis", "Marini's Candies", "Santa Cruz Beach Boardwalk Gift Shops", "Seymour Marine Discovery Center Store", "Target Capitola", "Toys N Tech", "Wonderland Toys"],
+  "Women's Clothing": ["Berdels", "Botanic and Luxe", "Cameron Marks", "Closet Shopper", "Gap Capitola Mall", "O'Neill Surf Shop", "Pacific Trading Company", "Pacific Wave", "Patagonia Outlet Santa Cruz", "Rip Curl Capitola", "Stripe Design Group", "Wallflower Boutique"],
+  "Charter": ["Alternative Family Education", "Ceiba College Preparatory Academy", "Cypress Charter High School", "Delta Charter High School", "Linscott Charter School", "Nature Academy", "Ocean Grove Charter School", "Ocean Alternative Education Center", "Pacific Collegiate School", "Santa Cruz Montessori Charter School", "Watsonville Charter School of the Arts"],
+  "Elementary": ["Amesti Elementary School", "Bay View Elementary School", "DeLaveaga Elementary School", "Gateway School", "Gault Elementary School", "Main Street Elementary School", "Mar Vista Elementary School", "Mount Madonna School", "Orchard School", "Rio del Mar Elementary School", "Valencia Elementary School", "Vine Hill Elementary School", "Westlake Elementary School"],
+  "Middle School": ["Aptos Junior High School", "Branciforte Middle School", "E. A. Hall Middle School", "Gateway School", "Kirby School", "Mission Hill Middle School", "Mount Madonna School", "New Brighton Middle School", "Pacific Collegiate School", "Pajaro Middle School", "Rolling Hills Middle School", "San Lorenzo Valley Middle School", "Scotts Valley Middle School", "Shoreline Middle School"],
+  "High School": ["Aptos High School", "Cypress Charter High School", "Harbor High School", "Kirby School", "Mount Madonna School", "Pacific Collegiate School", "Pajaro Valley High School", "San Lorenzo Valley High School", "Santa Cruz High School", "Scotts Valley High School", "Soquel High School", "Watsonville High School"],
+  "Preschool": ["Baymonte Christian Preschool", "Bridges to Kinder", "Campus Kids Connection Preschool", "Discovery Preschool and Family Center", "Holy Cross Preschool", "Mount Madonna School Preschool", "Rocking Horse Ranch Preschool", "Santa Cruz Montessori", "St. Lawrence Academy Preschool", "Tara Redwood School"],
+  "Private School": ["Baymonte Christian School", "Chrysostom Classical Academy", "Gateway School", "Holy Cross School", "Kirby School", "Mount Madonna School", "Orchard School", "Salesian Elementary and Junior High", "Santa Cruz Montessori", "St. Francis High School"],
+  "Place to celebrate kid's Birthday": ["Boardwalk Bowl", "JuneBug's Gym", "Mount Hermon Adventures", "Petroglyph Ceramic Lounge", "Roaring Camp Railroads", "Santa Cruz Beach Boardwalk", "Santa Cruz Children's Museum of Discovery", "Santa Cruz Gymnastics Center", "Santa Cruz Roller Palladium", "Seymour Marine Discovery Center", "Skypark"],
+  "Place to celebrate an adult Birthday or milestone": ["Bargetto Winery", "Chaminade Resort & Spa", "Kuumbwa Jazz", "Laili Restaurant", "Oswald Restaurant", "Sanderlings Restaurant", "Santa Cruz Mountain Brewing", "Shadowbrook Restaurant", "The Dream Inn", "Venus Spirits Cocktails & Kitchen"],
+  "Dog Friendly Restaurants": ["Aldo's Harbor Restaurant", "Aptos Street BBQ", "Betty Burgers", "Cafe Cruz", "Carpo's Restaurant", "Hula's Island Grill", "Laili Restaurant", "Parish Publick House Aptos", "Seabright Social", "The Hideout"],
+  "Dog Friendly Hikes": ["Arana Gulch", "DeLaveaga Park", "Henry Cowell Redwoods State Park", "Moore Creek Preserve", "Pogonip Open Space", "Quail Hollow Ranch County Park", "The Forest of Nisene Marks State Park", "Wilder Ranch State Park"],
+  "Dog Friendly Beaches": ["Its Beach", "Mitchell's Cove Beach", "New Brighton State Beach", "Rio Del Mar State Beach", "Seabright State Beach", "Twin Lakes State Beach"]
 };
 
 function createBallotQuestion(category) {
@@ -177,12 +200,12 @@ function createBallotQuestion(category) {
     type: "select-other",
     required: false,
     category: categoryGroup(category),
-    options: [...(categoryOptions[category] || []), "Other"]
+    options: [...sortChoiceOptions(categoryOptions[category] || []), "Other"]
   };
 }
 
 const sampleSurvey = {
-  version: 4,
+  version: 5,
   title: "Growing Up in Santa Cruz Best Of 2026 Reader Poll",
   description: introText,
   thankYou: thankYouText,
@@ -330,7 +353,7 @@ async function loadRemoteConfig() {
     const result = await apiRequest("config");
     if (!result?.ok) return;
 
-    if (result.data.survey) {
+    if (isCurrentSurveyConfig(result.data.survey)) {
       survey = result.data.survey;
       saveSurvey();
     }
@@ -351,7 +374,7 @@ async function loadRemoteResults(showError = true) {
       return false;
     }
 
-    if (result.data.survey) {
+    if (isCurrentSurveyConfig(result.data.survey)) {
       survey = result.data.survey;
       saveSurvey();
     }
@@ -364,6 +387,10 @@ async function loadRemoteResults(showError = true) {
     if (showError) alert("Could not reach the backend results service.");
     return false;
   }
+}
+
+function isCurrentSurveyConfig(remoteSurvey) {
+  return Boolean(remoteSurvey && Number(remoteSurvey.version || 0) >= sampleSurvey.version);
 }
 
 async function saveRemoteSurvey() {
@@ -395,7 +422,7 @@ function mergeRemoteOptions(optionMap) {
       }
     });
 
-    return { ...question, options: [...merged, "Other"] };
+    return { ...question, options: [...sortChoiceOptions(merged), "Other"] };
   });
 
   if (changed) saveSurvey();
@@ -529,7 +556,7 @@ function renderChoices(question, inputType) {
 function renderSelectWithOther(question) {
   const group = document.createElement("div");
   group.className = "select-other-group";
-  const options = question.options.includes("Other") ? question.options : [...question.options, "Other"];
+  const options = [...sortChoiceOptions(question.options), "Other"];
 
   const select = document.createElement("select");
   select.name = question.id;
@@ -619,8 +646,7 @@ function getChoiceCandidates(question) {
 function addOptionToQuestion(questionId, option) {
   survey.questions = survey.questions.map((question) => {
     if (question.id !== questionId || question.options.includes(option)) return question;
-    const baseOptions = question.options.filter((item) => item !== "Other");
-    return { ...question, options: [...baseOptions, option, "Other"] };
+    return { ...question, options: [...sortChoiceOptions([...question.options, option]), "Other"] };
   });
   saveSurvey();
 }
