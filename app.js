@@ -105,6 +105,19 @@ function sortChoiceOptions(options) {
   return cleaned.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 }
 
+const retiredOptions = {
+  "best-day-camp": ["Seymour Marine Discovery Center Ocean Explorers"],
+  "best-residential-camp": ["Camp Hammer"],
+  "best-radio-station": ["KDON 102.5"]
+};
+
+function cleanQuestionOptions(questionId, options) {
+  const retired = retiredOptions[questionId] || [];
+  return options.filter(
+    (option) => !retired.some((retiredOption) => normalizeChoice(retiredOption) === normalizeChoice(option))
+  );
+}
+
 function categoryGroup(category) {
   if (["Day Camp", "Residential Camp"].includes(category)) return "Camps";
   if (["After School Care", "Art", "Dance", "Music", "Sport", "Swimming", "Theater", "Gymnastics"].includes(category)) return "Activities";
@@ -194,18 +207,20 @@ const categoryOptions = {
 };
 
 function createBallotQuestion(category) {
+  const id = `best-${slugify(category)}`;
+
   return {
-    id: `best-${slugify(category)}`,
+    id,
     label: `Best ${category}`,
     type: "select-other",
     required: false,
     category: categoryGroup(category),
-    options: [...sortChoiceOptions(categoryOptions[category] || []), "Other"]
+    options: [...sortChoiceOptions(cleanQuestionOptions(id, categoryOptions[category] || [])), "Other"]
   };
 }
 
 const sampleSurvey = {
-  version: 6,
+  version: 7,
   title: "Growing Up in Santa Cruz Best Of 2026 Reader Poll",
   description: introText,
   thankYou: thankYouText,
@@ -414,9 +429,14 @@ function mergeRemoteOptions(optionMap) {
     const remoteOptions = optionMap[question.id];
     if (!remoteOptions || question.type !== "select-other") return question;
 
-    const merged = [...question.options.filter((option) => option !== "Other")];
+    const merged = [...cleanQuestionOptions(question.id, question.options.filter((option) => option !== "Other"))];
     remoteOptions.forEach((option) => {
-      if (option && option !== "Other" && !merged.some((existing) => normalizeChoice(existing) === normalizeChoice(option))) {
+      if (
+        option &&
+        option !== "Other" &&
+        cleanQuestionOptions(question.id, [option]).length &&
+        !merged.some((existing) => normalizeChoice(existing) === normalizeChoice(option))
+      ) {
         merged.push(option);
         changed = true;
       }
@@ -556,7 +576,7 @@ function renderChoices(question, inputType) {
 function renderSelectWithOther(question) {
   const group = document.createElement("div");
   group.className = "select-other-group";
-  const options = [...sortChoiceOptions(question.options), "Other"];
+  const options = [...sortChoiceOptions(cleanQuestionOptions(question.id, question.options)), "Other"];
 
   const select = document.createElement("select");
   select.name = question.id;
@@ -644,9 +664,11 @@ function getChoiceCandidates(question) {
 }
 
 function addOptionToQuestion(questionId, option) {
+  if (!cleanQuestionOptions(questionId, [option]).length) return;
+
   survey.questions = survey.questions.map((question) => {
     if (question.id !== questionId || question.options.includes(option)) return question;
-    return { ...question, options: [...sortChoiceOptions([...question.options, option]), "Other"] };
+    return { ...question, options: [...sortChoiceOptions(cleanQuestionOptions(question.id, [...question.options, option])), "Other"] };
   });
   saveSurvey();
 }
