@@ -205,7 +205,7 @@ function createBallotQuestion(category) {
 }
 
 const sampleSurvey = {
-  version: 5,
+  version: 6,
   title: "Growing Up in Santa Cruz Best Of 2026 Reader Poll",
   description: introText,
   thankYou: thankYouText,
