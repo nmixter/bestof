@@ -4,7 +4,9 @@ const COMPLETED_KEY = "guscm-best-of-2026-completed";
 const ADMIN_PASSWORD_KEY = "guscm-best-of-2026-admin-password";
 const API_ENDPOINT = "/.netlify/functions/survey";
 const BACKEND_ENABLED = location.protocol !== "file:";
-const ADMIN_MODE = new URLSearchParams(location.search).get("admin") === "1";
+const params = new URLSearchParams(location.search);
+const ADMIN_MODE = params.get("admin") === "1";
+const PREVIEW_MODE = ADMIN_MODE && params.get("preview") === "1";
 
 const introText =
   "Enter the survey for a chance to win a family four pack of tickets to the Boardwalk. One entry per person. Must be received by May 31. Winners will be announced in the July edition of Growing Up in Santa Cruz. Please let your family and friends know to vote for their favorites also. Vote for as many different categories as you can but only one vote per person.";
@@ -500,13 +502,21 @@ function renderPublicSurvey() {
     return;
   }
 
-  if (localStorage.getItem(COMPLETED_KEY) === survey.slug) {
+  if (!ADMIN_MODE && localStorage.getItem(COMPLETED_KEY) === survey.slug) {
     surveyQuestions.innerHTML = '<p class="empty">This browser has already submitted a ballot for this survey.</p>';
     publicSurvey.querySelector(".submit").disabled = true;
     return;
   }
 
   publicSurvey.querySelector(".submit").disabled = false;
+  publicSurvey.querySelector(".submit").textContent = PREVIEW_MODE ? "Preview Only" : "Done";
+
+  if (PREVIEW_MODE) {
+    const notice = document.createElement("p");
+    notice.className = "preview-notice";
+    notice.textContent = "Admin preview mode. This ballot will not be submitted or counted.";
+    surveyQuestions.appendChild(notice);
+  }
 
   let currentCategory = "";
 
@@ -1054,6 +1064,12 @@ document.querySelector("#copyLink").addEventListener("click", async () => {
 
 publicSurvey.addEventListener("submit", async (event) => {
   event.preventDefault();
+
+  if (PREVIEW_MODE) {
+    alert("Preview mode only. No ballot was submitted or counted.");
+    return;
+  }
+
   if (!validateRequiredGroups()) return;
   const response = collectResponse(publicSurvey);
 
