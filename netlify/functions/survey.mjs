@@ -112,7 +112,7 @@ function mergeSubmittedOptions(options, survey, response) {
     .filter((question) => question.type === "select-other")
     .forEach((question) => {
       const answer = response.answers[question.id];
-      if (!answer || Array.isArray(answer)) return;
+      if (!answer || Array.isArray(answer) || !isUsefulWriteIn(answer)) return;
 
       const existing = options[question.id] || question.options || [];
       const baseOptions = existing.filter((option) => option && option !== "Other");
@@ -148,12 +148,54 @@ function normalizeChoice(value) {
     .replace(/[^a-z0-9]/g, "");
 }
 
+const blockedWriteInPatterns = [
+  /^i\s*(do\s*not|don't|dont)\s*know$/,
+  /^idk$/,
+  /^not\s*sure$/,
+  /^none$/,
+  /^n\/?a$/,
+  /^no\s*(idea|clue)?$/,
+  /^unknown$/,
+  /^whatever$/,
+  /^anything$/,
+  /^someone$/,
+  /^somewhere$/,
+  /^that\s+one$/,
+  /^that\s+one\s+(downtown|in\s+\w+)$/,
+  /^the\s+one\s+(downtown|in\s+\w+)$/,
+  /^downtown$/,
+  /^my\s+(mom|mother|dad|father|parent|parents|friend|family|house|home)$/,
+  /^mom$/,
+  /^mother$/,
+  /^dad$/,
+  /^father$/,
+  /^other$/,
+  /^test$/,
+  /^asdf+$/,
+  /^qwerty$/,
+  /^blah$/,
+  /^dummy$/,
+  /^fake$/
+];
+
+function isUsefulWriteIn(value) {
+  const cleaned = String(value || "").replace(/\s+/g, " ").trim();
+  const normalizedWords = cleaned.toLowerCase();
+  const normalizedCompact = normalizeChoice(cleaned);
+
+  if (cleaned.length < 3 || normalizedCompact.length < 3) return false;
+  if (/^(.)\1{2,}$/.test(normalizedCompact)) return false;
+  if (!/[a-z]/i.test(cleaned)) return false;
+
+  return !blockedWriteInPatterns.some((pattern) => pattern.test(normalizedWords));
+}
+
 function sortChoiceOptions(options) {
   const seen = new Set();
   const cleaned = [];
 
   options
-    .filter((option) => option && option !== "Other")
+    .filter((option) => option && option !== "Other" && isUsefulWriteIn(option))
     .forEach((option) => {
       const key = normalizeChoice(option);
       if (seen.has(key)) return;
