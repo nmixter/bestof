@@ -9,7 +9,7 @@ const ADMIN_MODE = params.get("admin") === "1";
 const PREVIEW_MODE = ADMIN_MODE && params.get("preview") === "1";
 
 const introText =
-  "Enter the survey for a chance to win a family four pack of tickets to the Boardwalk. One entry per person. Must be received by May 31. Winners will be announced in the July edition of Growing Up in Santa Cruz. Please let your family and friends know to vote for their favorites also. Vote for as many different categories as you can but only one vote per person.";
+  'Enter the survey for a chance to win a family four pack of tickets to Gilroy Gardens. One entry per person. Must be received by May 31. Winners will be announced in the July edition of Growing Up in Santa Cruz. Please let your family and friends know to vote for their favorites also. Either select an existing option or add your own by selecting "other". Vote for as many different categories as you can but only one vote per person.';
 
 const thankYouText =
   "Thank you for voting in this year's Best of Santa Cruz poll. Look for results in the July Growing Up in Santa Cruz edition.";
@@ -113,11 +113,55 @@ const retiredOptions = {
   "best-radio-station": ["KDON 102.5"]
 };
 
+const blockedWriteInPatterns = [
+  /^i\s*(do\s*not|don't|dont)\s*know$/,
+  /^idk$/,
+  /^not\s*sure$/,
+  /^none$/,
+  /^n\/?a$/,
+  /^no\s*(idea|clue)?$/,
+  /^unknown$/,
+  /^whatever$/,
+  /^anything$/,
+  /^someone$/,
+  /^somewhere$/,
+  /^that\s+one$/,
+  /^that\s+one\s+(downtown|in\s+\w+)$/,
+  /^the\s+one\s+(downtown|in\s+\w+)$/,
+  /^downtown$/,
+  /^my\s+(mom|mother|dad|father|parent|parents|friend|family|house|home)$/,
+  /^mom$/,
+  /^mother$/,
+  /^dad$/,
+  /^father$/,
+  /^other$/,
+  /^test$/,
+  /^asdf+$/,
+  /^qwerty$/,
+  /^blah$/,
+  /^dummy$/,
+  /^fake$/
+];
+
 function cleanQuestionOptions(questionId, options) {
   const retired = retiredOptions[questionId] || [];
   return options.filter(
-    (option) => !retired.some((retiredOption) => normalizeChoice(retiredOption) === normalizeChoice(option))
+    (option) =>
+      !retired.some((retiredOption) => normalizeChoice(retiredOption) === normalizeChoice(option)) &&
+      isUsefulWriteIn(option)
   );
+}
+
+function isUsefulWriteIn(value) {
+  const cleaned = String(value || "").replace(/\s+/g, " ").trim();
+  const normalizedWords = cleaned.toLowerCase();
+  const normalizedCompact = normalizeChoice(cleaned);
+
+  if (cleaned.length < 3 || normalizedCompact.length < 3) return false;
+  if (/^(.)\1{2,}$/.test(normalizedCompact)) return false;
+  if (!/[a-z]/i.test(cleaned)) return false;
+
+  return !blockedWriteInPatterns.some((pattern) => pattern.test(normalizedWords));
 }
 
 function categoryGroup(category) {
@@ -222,7 +266,7 @@ function createBallotQuestion(category) {
 }
 
 const sampleSurvey = {
-  version: 8,
+  version: 9,
   title: "Growing Up in Santa Cruz Best Of 2026 Reader Poll",
   description: introText,
   thankYou: thankYouText,
@@ -647,6 +691,10 @@ function collectResponse(form) {
 function resolveWriteIn(question, rawValue) {
   const cleaned = formatWriteIn(rawValue);
   if (!cleaned) return "";
+  if (!isUsefulWriteIn(cleaned)) {
+    alert("Please enter the official name of a real local business, school, organization, or place.");
+    return "";
+  }
 
   const candidates = getChoiceCandidates(question);
   const exact = candidates.find((candidate) => normalizeChoice(candidate) === normalizeChoice(cleaned));
