@@ -106,7 +106,7 @@ function sortChoiceOptions(options) {
 }
 
 const retiredOptions = {
-  "best-day-camp": ["Seymour Marine Discovery Center Ocean Explorers"],
+  "best-day-camp": ["Seymour Marine Discovery Center Ocean Explorers", "Redwood Music Teen Camp"],
   "best-residential-camp": ["Camp Hammer"],
   "best-radio-station": ["KDON 102.5"]
 };
@@ -134,7 +134,7 @@ function categoryGroup(category) {
 }
 
 const categoryOptions = {
-  "Day Camp": ["All About Theatre", "Art Factory", "Be Natural Music", "Camp Gateway", "City of Santa Cruz Parks & Recreation", "Drawn2Art", "International Academy of Dance Santa Cruz", "Kennolyn Camps", "Mount Hermon Adventures", "Mount Madonna School", "Redwood Music Teen Camp", "Santa Cruz County Parks Summer Camps", "Santa Cruz Museum of Natural History Camps", "Santa Cruz SPCA Kids Camp", "Santa Cruz Waldorf School", "Scotts Valley Recreation", "Tannery World Dance & Cultural Center Camp", "Tara Redwood School", "WEST Performing Arts"],
+  "Day Camp": ["All About Theatre", "Art Factory", "Be Natural Music", "Camp Gateway", "City of Santa Cruz Parks & Recreation", "Drawn2Art", "International Academy of Dance Santa Cruz", "Kennolyn Camps", "Mount Hermon Adventures", "Mount Madonna School", "Redwood Music Kid Camp", "Santa Cruz County Parks Summer Camps", "Santa Cruz Museum of Natural History Camps", "Santa Cruz SPCA Kids Camp", "Santa Cruz Waldorf School", "Scotts Valley Recreation", "Tannery World Dance & Cultural Center Camp", "Tara Redwood School", "WEST Performing Arts"],
   "Residential Camp": ["Camp Krem", "Kennolyn Camps", "Monte Toyon Camp and Conference Center", "Mount Hermon Redwood Camp", "Redwood Music Teen Camp", "YMCA Camp Campbell"],
   "Bakery": ["Gayle's Bakery & Rosticceria", "The Buttery", "Companion Bakeshop", "Kelly's French Bakery", "The Grove Cafe & Bakery", "Manresa Bread", "Emily's Bakery", "Pacific Cookie Company", "Beckmann's Old World Bakery", "Aldo's Bakery"],
   "Coffee Shop": ["Verve Coffee Roasters", "Cat & Cloud Coffee", "11th Hour Coffee", "Santa Cruz Coffee Roasting Co.", "Lulu Carpenter's", "Firefly Coffee House", "People's Coffee", "Java Junction", "Mariposa Coffee Bar", "Coffeeville"],
@@ -220,7 +220,7 @@ function createBallotQuestion(category) {
 }
 
 const sampleSurvey = {
-  version: 7,
+  version: 8,
   title: "Growing Up in Santa Cruz Best Of 2026 Reader Poll",
   description: introText,
   thankYou: thankYouText,
