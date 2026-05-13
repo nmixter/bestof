@@ -44,6 +44,7 @@ const ballotCategories = [
   "Insurance",
   "Photographer",
   "Realtor",
+  "Radio Station",
   "Dentist/Orthodontist",
   "Fitness",
   "Hospital",
@@ -63,7 +64,6 @@ const ballotCategories = [
   "Kennel",
   "Pet supplies",
   "Veterinarian",
-  "Radio Station",
   "Art Supplies",
   "Baby",
   "Bike Shop",
@@ -278,7 +278,7 @@ function createBallotQuestion(category) {
 }
 
 const sampleSurvey = {
-  version: 11,
+  version: 12,
   title: "Growing Up in Santa Cruz Best Of 2026 Reader Poll",
   description: introText,
   thankYou: thankYouText,
