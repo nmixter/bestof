@@ -110,7 +110,7 @@ function sortChoiceOptions(options) {
 }
 
 const retiredOptions = {
-  "best-day-camp": ["Seymour Marine Discovery Center Ocean Explorers", "Redwood Music Teen Camp", "Community Music School Kid", "Community Music Kid Camp", "Community Music School Kid Camp", "Community Music Kid Camps"],
+  "best-day-camp": ["Seymour Marine Discovery Center Ocean Explorers", "Redwood Music Teen Camp", "Community Music School Kid", "Community Music Kid Camp", "Community Music School Kid Camp", "Community Music Kid Camps", "Community Music School of Santa Cruz Kids Camp", "Community Music School of Santa Cruz Kid Camp"],
   "best-dance": ["Santa Cruz Ballet Theatre"],
   "best-dinner": ["Cafe Sparrow"],
   "best-fine-dining": ["Cafe Sparrow"],
@@ -119,7 +119,7 @@ const retiredOptions = {
   "best-teen-clothing": ["Gap Capitola Mall"],
   "best-women-s-clothing": ["Gap Capitola Mall"],
   "best-music": ["MusicalMe"],
-  "best-residential-camp": ["Camp Hammer", "Community Music Teen Camp", "Community Music Teen Camps", "Community Music School Teen Camp", "Community Music School Teen Camps"],
+  "best-residential-camp": ["Camp Hammer", "Community Music Teen Camp", "Community Music Teen Camps", "Community Music School Teen Camp", "Community Music School Teen Camps", "Community Music School of Santa Cruz Teen Camp", "Community Music School of Santa Cruz Teen Camps"],
   "best-radio-station": ["KDON 102.5"]
 };
 
@@ -129,13 +129,21 @@ const canonicalAnswerAliases = {
     communitymusickidcamp: "Redwood Music Kid Camp",
     communitymusicschoolkidcamp: "Redwood Music Kid Camp",
     communitymusickidcamps: "Redwood Music Kid Camp",
-    communitymusicschoolkidcamps: "Redwood Music Kid Camp"
+    communitymusicschoolkidcamps: "Redwood Music Kid Camp",
+    communitymusicschoolsantacruzkidcamp: "Redwood Music Kid Camp",
+    communitymusicschoolsantacruzkidscamp: "Redwood Music Kid Camp",
+    communitymusicschoolofsantacruzkidcamp: "Redwood Music Kid Camp",
+    communitymusicschoolofsantacruzkidscamp: "Redwood Music Kid Camp"
   },
   "best-residential-camp": {
     communitymusicteencamp: "Redwood Music Teen Camp",
     communitymusicteencamps: "Redwood Music Teen Camp",
     communitymusicschoolteencamp: "Redwood Music Teen Camp",
-    communitymusicschoolteencamps: "Redwood Music Teen Camp"
+    communitymusicschoolteencamps: "Redwood Music Teen Camp",
+    communitymusicschoolsantacruzteencamp: "Redwood Music Teen Camp",
+    communitymusicschoolsantacruzteencamps: "Redwood Music Teen Camp",
+    communitymusicschoolofsantacruzteencamp: "Redwood Music Teen Camp",
+    communitymusicschoolofsantacruzteencamps: "Redwood Music Teen Camp"
   }
 };
 
@@ -300,7 +308,7 @@ function createBallotQuestion(category) {
 }
 
 const sampleSurvey = {
-  version: 13,
+  version: 14,
   title: "Growing Up in Santa Cruz Best Of 2026 Reader Poll",
   description: introText,
   thankYou: thankYouText,
