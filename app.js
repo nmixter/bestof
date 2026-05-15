@@ -110,7 +110,7 @@ function sortChoiceOptions(options) {
 }
 
 const retiredOptions = {
-  "best-day-camp": ["Seymour Marine Discovery Center Ocean Explorers", "Redwood Music Teen Camp"],
+  "best-day-camp": ["Seymour Marine Discovery Center Ocean Explorers", "Redwood Music Teen Camp", "Community Music School Kid", "Community Music Kid Camp", "Community Music School Kid Camp", "Community Music Kid Camps"],
   "best-dance": ["Santa Cruz Ballet Theatre"],
   "best-dinner": ["Cafe Sparrow"],
   "best-fine-dining": ["Cafe Sparrow"],
@@ -119,8 +119,24 @@ const retiredOptions = {
   "best-teen-clothing": ["Gap Capitola Mall"],
   "best-women-s-clothing": ["Gap Capitola Mall"],
   "best-music": ["MusicalMe"],
-  "best-residential-camp": ["Camp Hammer"],
+  "best-residential-camp": ["Camp Hammer", "Community Music Teen Camp", "Community Music Teen Camps", "Community Music School Teen Camp", "Community Music School Teen Camps"],
   "best-radio-station": ["KDON 102.5"]
+};
+
+const canonicalAnswerAliases = {
+  "best-day-camp": {
+    communitymusicschoolkid: "Redwood Music Kid Camp",
+    communitymusickidcamp: "Redwood Music Kid Camp",
+    communitymusicschoolkidcamp: "Redwood Music Kid Camp",
+    communitymusickidcamps: "Redwood Music Kid Camp",
+    communitymusicschoolkidcamps: "Redwood Music Kid Camp"
+  },
+  "best-residential-camp": {
+    communitymusicteencamp: "Redwood Music Teen Camp",
+    communitymusicteencamps: "Redwood Music Teen Camp",
+    communitymusicschoolteencamp: "Redwood Music Teen Camp",
+    communitymusicschoolteencamps: "Redwood Music Teen Camp"
+  }
 };
 
 const blockedWriteInPatterns = [
@@ -172,6 +188,12 @@ function isUsefulWriteIn(value) {
   if (!/[a-z]/i.test(cleaned)) return false;
 
   return !blockedWriteInPatterns.some((pattern) => pattern.test(normalizedWords));
+}
+
+function canonicalizeAnswer(questionId, value) {
+  if (typeof value !== "string") return value;
+  const aliases = canonicalAnswerAliases[questionId] || {};
+  return aliases[normalizeChoice(value)] || value;
 }
 
 function categoryGroup(category) {
@@ -278,7 +300,7 @@ function createBallotQuestion(category) {
 }
 
 const sampleSurvey = {
-  version: 12,
+  version: 13,
   title: "Growing Up in Santa Cruz Best Of 2026 Reader Poll",
   description: introText,
   thankYou: thankYouText,
@@ -681,7 +703,8 @@ function collectResponse(form) {
     if (question.type === "select-other") {
       const selected = form.querySelector(`[name="${question.id}"]`)?.value || "";
       const other = form.querySelector(`[name="${question.id}-other"]`)?.value.trim() || "";
-      answers[question.id] = selected === "Other" ? resolveWriteIn(question, other) : selected;
+      const answer = selected === "Other" ? resolveWriteIn(question, other) : selected;
+      answers[question.id] = canonicalizeAnswer(question.id, answer);
       return;
     }
 
@@ -710,18 +733,18 @@ function resolveWriteIn(question, rawValue) {
 
   const candidates = getChoiceCandidates(question);
   const exact = candidates.find((candidate) => normalizeChoice(candidate) === normalizeChoice(cleaned));
-  if (exact) return exact;
+  if (exact) return canonicalizeAnswer(question.id, exact);
 
   const similar = findSimilarChoice(cleaned, candidates);
-  if (similar.score >= 0.94) return similar.label;
+  if (similar.score >= 0.94) return canonicalizeAnswer(question.id, similar.label);
 
   if (similar.label) {
     const useExisting = confirm(`Did you mean "${similar.label}"?\n\nChoose OK to count your vote for "${similar.label}", or Cancel to keep "${cleaned}".`);
-    if (useExisting) return similar.label;
+    if (useExisting) return canonicalizeAnswer(question.id, similar.label);
   }
 
   addOptionToQuestion(question.id, cleaned);
-  return cleaned;
+  return canonicalizeAnswer(question.id, cleaned);
 }
 
 function getChoiceCandidates(question) {
@@ -938,12 +961,16 @@ function countAnswers(question) {
     const answer = response.answers[question.id];
     if (Array.isArray(answer)) {
       answer.forEach((value) => {
-        counts[value] = (counts[value] || 0) + 1;
+        const canonical = canonicalizeAnswer(question.id, value);
+        counts[canonical] = (counts[canonical] || 0) + 1;
       });
       return;
     }
 
-    if (answer) counts[answer] = (counts[answer] || 0) + 1;
+    if (answer) {
+      const canonical = canonicalizeAnswer(question.id, answer);
+      counts[canonical] = (counts[canonical] || 0) + 1;
+    }
   });
 
   return counts;
@@ -973,7 +1000,9 @@ function exportCsv() {
     response.submittedAt,
     ...survey.questions.map((question) => {
       const value = response.answers[question.id] ?? "";
-      return Array.isArray(value) ? value.join("; ") : value;
+      return Array.isArray(value)
+        ? value.map((item) => canonicalizeAnswer(question.id, item)).join("; ")
+        : canonicalizeAnswer(question.id, value);
     })
   ]);
 
