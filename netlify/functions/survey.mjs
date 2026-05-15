@@ -128,13 +128,21 @@ const canonicalAnswerAliases = {
     communitymusickidcamp: "Redwood Music Kid Camp",
     communitymusicschoolkidcamp: "Redwood Music Kid Camp",
     communitymusickidcamps: "Redwood Music Kid Camp",
-    communitymusicschoolkidcamps: "Redwood Music Kid Camp"
+    communitymusicschoolkidcamps: "Redwood Music Kid Camp",
+    communitymusicschoolsantacruzkidcamp: "Redwood Music Kid Camp",
+    communitymusicschoolsantacruzkidscamp: "Redwood Music Kid Camp",
+    communitymusicschoolofsantacruzkidcamp: "Redwood Music Kid Camp",
+    communitymusicschoolofsantacruzkidscamp: "Redwood Music Kid Camp"
   },
   "best-residential-camp": {
     communitymusicteencamp: "Redwood Music Teen Camp",
     communitymusicteencamps: "Redwood Music Teen Camp",
     communitymusicschoolteencamp: "Redwood Music Teen Camp",
-    communitymusicschoolteencamps: "Redwood Music Teen Camp"
+    communitymusicschoolteencamps: "Redwood Music Teen Camp",
+    communitymusicschoolsantacruzteencamp: "Redwood Music Teen Camp",
+    communitymusicschoolsantacruzteencamps: "Redwood Music Teen Camp",
+    communitymusicschoolofsantacruzteencamp: "Redwood Music Teen Camp",
+    communitymusicschoolofsantacruzteencamps: "Redwood Music Teen Camp"
   }
 };
 
