@@ -51,6 +51,7 @@ async function submitResponse(request, context) {
   }
 
   const options = (await store.get(OPTIONS_KEY, { type: "json", consistency: "strong" })) || {};
+  canonicalizeResponseAnswers(response, survey);
   mergeSubmittedOptions(options, survey, response);
 
   const saved = {
@@ -119,6 +120,42 @@ function mergeSubmittedOptions(options, survey, response) {
       const hasAnswer = baseOptions.some((option) => normalizeChoice(option) === normalizeChoice(answer));
       options[question.id] = hasAnswer ? [...sortChoiceOptions(baseOptions), "Other"] : [...sortChoiceOptions([...baseOptions, answer]), "Other"];
     });
+}
+
+const canonicalAnswerAliases = {
+  "best-day-camp": {
+    communitymusicschoolkid: "Redwood Music Kid Camp",
+    communitymusickidcamp: "Redwood Music Kid Camp",
+    communitymusicschoolkidcamp: "Redwood Music Kid Camp",
+    communitymusickidcamps: "Redwood Music Kid Camp",
+    communitymusicschoolkidcamps: "Redwood Music Kid Camp"
+  },
+  "best-residential-camp": {
+    communitymusicteencamp: "Redwood Music Teen Camp",
+    communitymusicteencamps: "Redwood Music Teen Camp",
+    communitymusicschoolteencamp: "Redwood Music Teen Camp",
+    communitymusicschoolteencamps: "Redwood Music Teen Camp"
+  }
+};
+
+function canonicalizeResponseAnswers(response, survey) {
+  if (!survey || !Array.isArray(survey.questions) || !response?.answers) return;
+
+  survey.questions.forEach((question) => {
+    const answer = response.answers[question.id];
+    if (Array.isArray(answer)) {
+      response.answers[question.id] = answer.map((value) => canonicalizeAnswer(question.id, value));
+      return;
+    }
+
+    response.answers[question.id] = canonicalizeAnswer(question.id, answer);
+  });
+}
+
+function canonicalizeAnswer(questionId, value) {
+  if (typeof value !== "string") return value;
+  const aliases = canonicalAnswerAliases[questionId] || {};
+  return aliases[normalizeChoice(value)] || value;
 }
 
 function stripPrivateResponseFields(response) {
